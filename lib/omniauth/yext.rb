@@ -1,4 +1,5 @@
 require "omniauth/yext/version"
+require "omniauth/strategies/yext"
 
 module Omniauth
   module Yext
