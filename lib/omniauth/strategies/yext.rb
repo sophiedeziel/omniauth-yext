@@ -11,7 +11,8 @@ module OmniAuth
       option :client_options, {
         :site => "https://www.yext.com",
         :authorize_url => "https://www.yext.com/oauth2/authorize",
-        :token_url => "https://www.yext.com/oauth2/accesstoken",
+        :token_url => "https://api.yext.com/oauth2/accesstoken",
+        :me_url => "https://api.yext.com/v2/accounts/me",
       }
 
       # These are called after authentication has succeeded. If
@@ -19,13 +20,10 @@ module OmniAuth
       # additional calls (if the user id is returned with the token
       # or as a URI parameter). This may not be possible with all
       # providers.
-      uid{ raw_info['id'] }
+      uid{ raw_info['response']['accountId'] }
 
       info do
-        {
-          :name => raw_info['name'],
-          :email => raw_info['email']
-        }
+        deep_symbolize raw_info['response']
       end
 
       extra do
@@ -35,7 +33,19 @@ module OmniAuth
       end
 
       def raw_info
-        @raw_info ||= access_token.get('/me').parsed
+        @raw_info ||= access_token.get(me_url).parsed
+      end
+
+      def build_access_token
+        verifier = request.params["code"]
+        redirect_uri = callback_url.gsub(query_string, '')
+        client.auth_code.get_token(verifier, { redirect_uri: redirect_uri }.merge(token_params.to_hash(:symbolize_keys => true)), deep_symbolize(options.auth_token_params))
+      end
+
+      private
+
+      def me_url
+        "#{client.options[:me_url]}?access_token=#{access_token.token}&v=20170524"
       end
     end
   end

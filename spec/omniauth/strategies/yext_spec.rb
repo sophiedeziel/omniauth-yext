@@ -17,7 +17,11 @@ describe OmniAuth::Strategies::Yext do
     end
 
     it 'has correct token url' do
-      expect(subject.client.options[:token_url]).to eq('https://www.yext.com/oauth2/accesstoken')
+      expect(subject.client.options[:token_url]).to eq('https://api.yext.com/oauth2/accesstoken')
+    end
+
+    it 'has correct me url' do
+      expect(subject.client.options[:me_url]).to eq('https://api.yext.com/v2/accounts/me')
     end
   end
 
@@ -29,7 +33,7 @@ describe OmniAuth::Strategies::Yext do
 
   describe '#uid' do
     before :each do
-      allow(subject).to receive(:raw_info) { { 'id' => 'uid' } }
+      allow(subject).to receive(:raw_info) { { 'response' => { 'accountId' => 'uid' } } }
     end
 
     it 'returns the id from raw_info' do
@@ -39,30 +43,16 @@ describe OmniAuth::Strategies::Yext do
 
   describe '#info' do
     context 'and therefore has all the necessary fields' do
-      before :each do
-        allow(subject).to receive(:raw_info) {
-          {
-            'full_name' => 'John Doe',
-            'contact' => {
-              'email_addresses' => [
-                { 'type' => 'primary', 'address' => 'john.doe@example.com' }
-              ]
-            },
-            'name' => 'JohnDoe'
-          }
-        }
-      end
+      before { allow(subject).to receive(:raw_info) { JSON.parse File.read('spec/fixtures/oauth_raw_info.json') } }
 
-      it { expect(subject.info).to have_key :name }
-      it { expect(subject.info).to have_key :email }
-    end
-
-    context 'and does not fail with empty response' do
-      before :each do
-        allow(subject).to receive(:raw_info) { {} }
-      end
-
-      it { expect { subject.info }.not_to raise_error }
+      it { expect(subject.info).to have_key :accountId }
+      it { expect(subject.info).to have_key :locationCount }
+      it { expect(subject.info).to have_key :subAccountCount }
+      it { expect(subject.info).to have_key :accountName }
+      it { expect(subject.info).to have_key :contactFirstName }
+      it { expect(subject.info).to have_key :contactLastName }
+      it { expect(subject.info).to have_key :contactPhone }
+      it { expect(subject.info).to have_key :contactEmail }
     end
   end
 
@@ -77,7 +67,7 @@ describe OmniAuth::Strategies::Yext do
   describe '#raw_info' do
     before :each do
       response = double('response', parsed: { 'foo' => 'bar' })
-      allow(subject).to receive(:access_token) { double('access token', get: response) }
+      allow(subject).to receive(:access_token) { double('access token', get: response, token: 'whatever') }
     end
 
     it 'returns parsed response from access token' do

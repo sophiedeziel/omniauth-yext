@@ -1,0 +1,19 @@
+{
+  "meta":
+  {
+    "uuid":"859ab267-80a7-4342-970b-eedc6b68714b",
+    "errors":[]
+  },
+  "response":
+  {
+    "accountId":"5555555",
+    "locationCount":4,
+    "subAccountCount":0,
+    "accountName":"John Doe's account",
+    "contactFirstName":"John",
+    "contactLastName":"Doe",
+    "contactPhone":"5555555555",
+    "contactEmail":"john.doe@example.com"
+  }
+}
+
